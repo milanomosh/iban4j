@@ -1,13 +1,8 @@
 package org.iban4j;
 
-import org.hamcrest.Matcher;
-import org.iban4j.matcher.IbanFormatExceptionActualValueMatcher;
-import org.iban4j.matcher.IbanFormatExceptionExpectedValueMatcher;
-import org.iban4j.matcher.IbanFormatViolationMatcher;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 import static org.junit.jupiter.api.Assertions.assertFalse;

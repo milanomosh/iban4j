@@ -58,13 +58,43 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <maven.compiler.target>1.8</maven.compiler.target>
         <maven.compiler.source>1.8</maven.compiler.source>
-        <maven.compiler.release>8</maven.compiler.release>
+        <maven.compiler.release>9</maven.compiler.release>
         <jdk7Signature>java17</jdk7Signature>
         <skipSigning>true</skipSigning>
         <junit-jupiter.version>5.9.2</junit-jupiter.version>
     </properties>
 
     <dependencies>
+        <dependency>
+            <groupId>com.amazonaws</groupId>
+            <artifactId>aws-lambda-java-events</artifactId>
+            <version>3.11.4</version>
+        </dependency>
+        <dependency>
+            <groupId>com.amazonaws</groupId>
+            <artifactId>aws-lambda-java-core</artifactId>
+            <version>1.1.0</version>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-web</artifactId>
+            <version>3.2.2</version>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-autoconfigure</artifactId>
+            <version>3.2.2</version>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-web</artifactId>
+            <version>6.1.3</version>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot</artifactId>
+            <version>3.2.2</version>
+        </dependency>
         <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter-engine</artifactId>
@@ -105,99 +135,66 @@
 
     <build>
         <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-shade-plugin</artifactId>
+                <version>2.4.3</version>
+                <configuration>
+                    <createDependencyReducedPom>false</createDependencyReducedPom>
+                </configuration>
+                <executions>
+                    <execution>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>shade</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
 
+            <plugin>
+                <!-- Build an executable JAR -->
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+                <version>3.1.0</version>
+                <configuration>
+                    <archive>
+                        <manifest>
+                            <addClasspath>true</addClasspath>
+                            <classpathPrefix>lib/</classpathPrefix>
+                            <mainClass>App.Application</mainClass>
+                        </manifest>
+                    </archive>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+                <version>2.6.3</version>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>repackage</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
             <!-- Compilation -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
                 <version>3.10.1</version>
                 <configuration>
+                    <source>9</source> <!-- Set your Java version -->
+                    <target>9</target> <!-- Set your Java version -->
+                    <compilerArgs>
+                        <arg>-parameters</arg>
+                    </compilerArgs>
                     <encoding>${project.build.sourceEncoding}</encoding>
                 </configuration>
             </plugin>
 
 
-            <!-- SureFire testing -->
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-surefire-plugin</artifactId>
-                <version>2.22.2</version>
-                <configuration>
-                    <!-- Sets the VM argument line used when unit tests are run. -->
-                    <argLine>${surefireArgLine}</argLine>
-                    <!-- Skips unit tests if the value of skip.unit.tests property is true -->
-                    <skipTests>${skipTests}</skipTests>
-                    <!-- Excludes integration tests when unit tests are run. -->
-                    <excludes>
-                        <exclude>**/IT*.java</exclude>
-                    </excludes>
-                    <includes>
-                        <include>**/Test*.java</include>
-                        <include>**/*Test.java</include>
-                        <include>**/*TestCase.java</include>
-                        <include>**/*Benchmark.java</include>
-                    </includes>
-                </configuration>
-            </plugin>
-
-
-            <!-- Code coverage -->
-            <plugin>
-                <groupId>org.jacoco</groupId>
-                <artifactId>jacoco-maven-plugin</artifactId>
-                <version>0.8.8</version>
-                <executions>
-                    <!--
-                       Prepares the property pointing to the JaCoCo runtime agent which
-                       is passed as VM argument when Maven the Surefire plugin is executed.
-                   -->
-                    <execution>
-                        <id>pre-unit-test</id>
-                        <goals>
-                            <goal>prepare-agent</goal>
-                        </goals>
-                        <configuration>
-                            <!-- Sets the path to the file which contains the execution data. -->
-                            <destFile>${project.build.directory}/coverage-reports/jacoco-ut.exec
-                            </destFile>
-                            <!--
-                               Sets the name of the property containing the settings
-                               for JaCoCo runtime agent.
-                           -->
-                            <propertyName>surefireArgLine</propertyName>
-                        </configuration>
-                    </execution>
-                    <!--
-                       Ensures that the code coverage report for unit tests is created after
-                       unit tests have been run.
-                   -->
-                    <execution>
-                        <id>post-unit-test</id>
-                        <phase>test</phase>
-                        <goals>
-                            <goal>report</goal>
-                        </goals>
-                        <configuration>
-                            <excludes>
-                                <exclude>**/org/iban4j/BicFormatException.*</exclude>
-                                <exclude>**/org/iban4j/Iban4jException.*</exclude>
-                                <exclude>**/org/iban4j/IbanFormatException.*</exclude>
-                                <exclude>**/org/iban4j/UnsupportedCountryException.*</exclude>
-                                <exclude>**/org/iban4j/InvalidCheckDigitException.*</exclude>
-                                <exclude>**/org/iban4j/**BicFormatViolation**</exclude>
-                                <exclude>**/org/iban4j/**IbanFormatViolation**</exclude>
-
-                            </excludes>
-                            <!-- Sets the path to the file which contains the execution data. -->
-                            <dataFile>${project.build.directory}/coverage-reports/jacoco-ut.exec
-                            </dataFile>
-                            <!-- Sets the output directory for the code coverage report. -->
-                            <outputDirectory>${project.reporting.outputDirectory}/jacoco
-                            </outputDirectory>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
 
             <!-- Bundle sources during verify phase -->
             <plugin>
@@ -222,7 +219,7 @@
             </plugin>
 
             <!-- Generating Javadoc during verify phase -->
-            <plugin>
+            <!--<plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-javadoc-plugin</artifactId>
                 <version>3.4.1</version>
@@ -238,10 +235,10 @@
                 <configuration>
                     <excludePackageNames>*.support</excludePackageNames>
                 </configuration>
-            </plugin>
+            </plugin> -->
 
             <!-- GPG Signing during verify phase -->
-            <plugin>
+            <!--<plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-gpg-plugin</artifactId>
                 <version>1.4</version>
@@ -257,7 +254,7 @@
                         </configuration>
                     </execution>
                 </executions>
-            </plugin>
+            </plugin>-->
 
             <!-- Releasing -->
             <plugin>
